@@ -1,0 +1,117 @@
+name: eval-harness
+
+# The eval harness is the project's regression net (see ROADMAP.md §1). This
+# workflow runs it against the PUBLIC synthetic demo corpus (JOURNAL_DEMO=1) so CI
+# never touches private journal data, and gates merges on a clean pass -> fail.
+#
+#   PR gate   : deterministic layers only (routing / retrieval / answer). Cheaper and
+#               fully reproducible, but still runs the real agent, so it needs the API
+#               key. Fails the check only on a clean pass -> fail vs baseline_demo.json.
+#   Nightly   : full run with the LLM judges, 3 runs/case for variance. Informational
+#               scoreboard; still fails on a genuine (non-flaky) pass -> fail.
+#
+# REQUIRED REPO SECRET: GEMINI_API_KEY  (Settings -> Secrets and variables -> Actions).
+# Until baseline_demo.json is committed the gate is inert (it warns and passes).
+
+on:
+  pull_request:
+    paths:
+      - "agent.py"
+      - "chroma_search.py"
+      - "query_constructor.py"
+      - "router.py"
+      - "period_analysis.py"
+      - "llm_client.py"
+      - "chunk.py"
+      - "database.py"
+      - "config.py"
+      - "evals/**"
+      - "demo/**"
+      - "requirements.txt"
+      - ".github/workflows/eval-harness.yml"
+  schedule:
+    - cron: "0 7 * * *" # 07:00 UTC nightly
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+concurrency:
+  group: eval-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JOURNAL_DEMO: "1"
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+jobs:
+  # ---------------------------------------------------------------- PR gate
+  gate:
+    # runs on PRs and manual dispatch, not on the nightly schedule
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Cache HuggingFace embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-all-MiniLM-L6-v2
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build demo index (deterministic, no API key)
+        run: |
+          python demo/generate_demo_corpus.py   # self-verifies ground truths
+          python chunk.py
+          python database.py
+
+      - name: Eval gate (deterministic layers)
+        run: python -m evals.ci_gate
+
+  # ---------------------------------------------------------------- nightly
+  nightly:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Cache HuggingFace embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-all-MiniLM-L6-v2
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build demo index (deterministic, no API key)
+        run: |
+          python demo/generate_demo_corpus.py
+          python chunk.py
+          python database.py
+
+      - name: Full eval (judges + variance)
+        run: |
+          python -m evals.ci_gate --judge --runs 3 | tee eval_output.txt
+          {
+            echo '## Nightly eval scoreboard'
+            echo '```'
+            sed -n '/SCOREBOARD/,/=====/p' eval_output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
