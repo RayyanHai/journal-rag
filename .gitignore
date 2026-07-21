@@ -14,6 +14,11 @@ demo/data/chroma_db/
 __pycache__/
 *.pyc
 
+# Frontend: dependencies, and the built bundle (web/ is emitted by `npm run build`
+# in frontend/; the SOURCE lives in frontend/ and IS committed).
+frontend/node_modules/
+web/
+
 # Local agent/tooling state
 .claude/
 

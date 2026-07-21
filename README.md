@@ -103,6 +103,22 @@ python api.py          # serves on http://127.0.0.1:8000 (reads the real corpus)
 A `web/` directory, when present, is served from the same origin, so one command
 runs both API and UI.
 
+**Front-end** (React + Vite, ChatGPT-style: past chats in the sidebar, source-cited
+answers, a Refresh-journal button). Source in `frontend/`:
+
+```
+# Dev (two terminals, hot reload):
+python api.py                       # API on :8000
+cd frontend && npm install && npm run dev   # UI on :5173 (proxies API calls to :8000)
+
+# Or build once and serve everything from api.py on :8000:
+cd frontend && npm run build        # emits ../web
+python api.py                       # now serves API + UI together
+```
+
+Past chats persist in the browser (localStorage) — no database. Follow-ups are sent
+with the conversation history so `router.py` can resolve “what did we eat then?”.
+
 ## Capabilities & known limits
 
 - ✅ Temporal questions ("after Oct 9th", "last time", "first time", date ranges)
