@@ -84,6 +84,25 @@ r.tool_calls    # [{"name","input"}, ...] — which tools ran with what args
 r.sources       # [{"title","date"}, ...] — entries surfaced
 ```
 
+### Web app (chat UI + refresh)
+
+`api.py` is a thin FastAPI layer over the same engine — no RAG logic is duplicated:
+
+```
+python api.py          # serves on http://127.0.0.1:8000 (reads the real corpus)
+```
+
+- `POST /chat` — `{message, history}` → `{answer, standalone_question, tool_calls, sources}`.
+  Stateless, exactly like `main.py`: the browser owns the history and sends it each
+  turn; the server rewrites follow-ups (`router.py`) then runs the agent.
+- `POST /refresh` + `GET /refresh/status` — re-run the offline pipeline
+  (`ingest → chunk → database → add_date_int`) in the background to pull new Notion
+  entries into the index. Refuses to run in demo mode (it rebuilds the real corpus).
+- `GET /health` — liveness + whether the API key is set.
+
+A `web/` directory, when present, is served from the same origin, so one command
+runs both API and UI.
+
 ## Capabilities & known limits
 
 - ✅ Temporal questions ("after Oct 9th", "last time", "first time", date ranges)
