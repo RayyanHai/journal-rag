@@ -7,3 +7,7 @@ openai==2.45.0          # client for Gemini's OpenAI-compatible endpoint (see ll
 python-dotenv==1.2.2
 pydantic==2.13.4
 notion-client==2.7.0    # only needed to (re)ingest from Notion
+
+# Web app (api.py) — thin HTTP layer over agent.answer_journal + the refresh pipeline.
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
