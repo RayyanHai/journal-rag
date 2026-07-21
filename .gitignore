@@ -1,0 +1,27 @@
+# Secrets — .env holds live Notion + Gemini API keys. NEVER commit.
+.env
+
+# Personal journal data — raw entries, chunks, vector stores, ChromaDB. NEVER commit.
+# Root-anchored (leading /) so it does NOT catch demo/data/, which is public.
+/data/
+
+# Demo corpus: raw entries + generator ARE committed (they're the public fixture);
+# chunks and the ChromaDB index are derived — rebuild with JOURNAL_DEMO=1.
+demo/data/chunks/
+demo/data/chroma_db/
+
+# Python
+__pycache__/
+*.pyc
+
+# Local agent/tooling state
+.claude/
+
+# Real-journal-derived eval artifacts — contain real first names + journal topics.
+# The PUBLIC eval story ships via the synthetic demo harness (golden_set_demo.py).
+# These stay local. NEVER commit.
+evals/golden_set.py
+evals/baseline.json
+evals/baseline.pre-phase5.bak.json
+evals/BASELINE_REPORT.md
+evals/judge_calibration.py
