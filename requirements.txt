@@ -1,0 +1,9 @@
+# Direct dependencies (pinned to the versions this was built and eval'd against).
+# torch / numpy etc. come in transitively via sentence-transformers.
+chromadb==1.5.9
+sentence-transformers==5.5.1
+rank-bm25==0.2.2
+openai==2.45.0          # client for Gemini's OpenAI-compatible endpoint (see llm_client.py)
+python-dotenv==1.2.2
+pydantic==2.13.4
+notion-client==2.7.0    # only needed to (re)ingest from Notion
