@@ -7,8 +7,9 @@ name: eval-harness
 #   PR gate   : deterministic layers only (routing / retrieval / answer). Cheaper and
 #               fully reproducible, but still runs the real agent, so it needs the API
 #               key. Fails the check only on a clean pass -> fail vs baseline_demo.json.
-#   Nightly   : full run with the LLM judges, 3 runs/case for variance. Informational
-#               scoreboard; still fails on a genuine (non-flaky) pass -> fail.
+#   Full run  : manual only (Actions -> Run workflow). Full run with the LLM judges,
+#               3 runs/case for variance; posts a scoreboard to the run summary. Kept
+#               out of a schedule on purpose — no unattended quota spend.
 #
 # REQUIRED REPO SECRET: GEMINI_API_KEY  (Settings -> Secrets and variables -> Actions).
 # Until baseline_demo.json is committed the gate is inert (it warns and passes).
@@ -29,9 +30,7 @@ on:
       - "demo/**"
       - "requirements.txt"
       - ".github/workflows/eval-harness.yml"
-  schedule:
-    - cron: "0 7 * * *" # 07:00 UTC nightly
-  workflow_dispatch: {} # allow manual runs from the Actions tab
+  workflow_dispatch: {} # manual full run from the Actions tab (no schedule on purpose)
 
 concurrency:
   group: eval-${{ github.workflow }}-${{ github.ref }}
@@ -44,8 +43,8 @@ env:
 jobs:
   # ---------------------------------------------------------------- PR gate
   gate:
-    # runs on PRs and manual dispatch, not on the nightly schedule
-    if: github.event_name != 'schedule'
+    # PR check: deterministic layers, blocks merge on a clean pass -> fail
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -76,9 +75,9 @@ jobs:
       - name: Eval gate (deterministic layers)
         run: python -m evals.ci_gate
 
-  # ---------------------------------------------------------------- nightly
-  nightly:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+  # ---------------------------------------------------------------- full run (manual)
+  full:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -110,7 +109,7 @@ jobs:
         run: |
           python -m evals.ci_gate --judge --runs 3 | tee eval_output.txt
           {
-            echo '## Nightly eval scoreboard'
+            echo '## Full eval scoreboard'
             echo '```'
             sed -n '/SCOREBOARD/,/=====/p' eval_output.txt
             echo '```'
