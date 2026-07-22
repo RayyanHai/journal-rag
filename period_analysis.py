@@ -8,8 +8,7 @@
 # because it never sees the whole set. These are DATASET operations, not searches.
 #
 # This module adds that missing primitive — fetch the COMPLETE set of entries in a
-# date range (no top_k) — and builds two capabilities on it, mirroring the two
-# shapes in PHASE_5.md:
+# date range (no top_k) — and builds two capabilities on it, in two shapes:
 #
 #   analyze_period   (map -> reduce)  classify each entry on a fuzzy dimension, then
 #                                     count/ratio the labels IN PYTHON (never let the
