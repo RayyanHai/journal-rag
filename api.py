@@ -97,9 +97,18 @@ def chat(req: ChatRequest):
         # so an unexpected error is a clean 500, not a broken response.
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
 
-    # Drop the heavy chunk `text` from sources — the UI only needs title + date for
-    # citation chips. (The engine keeps text internally for the faithfulness judge.)
-    sources = [Source(title=s.get("title", "Untitled"), date=s.get("date")) for s in result.sources]
+    # Sources come back one-per-CHUNK, so the same entry appears multiple times when
+    # several of its chunks are retrieved. Dedupe to one row per entry (date, title) —
+    # the UI shows entries, not chunks. Drop the heavy chunk `text` too; the UI only
+    # needs title + date. (The engine keeps text internally for the faithfulness judge.)
+    seen = set()
+    sources = []
+    for s in result.sources:
+        key = (s.get("date"), s.get("title"))
+        if key in seen:
+            continue
+        seen.add(key)
+        sources.append(Source(title=s.get("title", "Untitled"), date=s.get("date")))
     return ChatResponse(
         answer=result.answer,
         standalone_question=standalone,

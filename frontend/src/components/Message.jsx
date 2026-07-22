@@ -6,7 +6,9 @@ import { useState } from 'react'
 export default function Message({ message }) {
   const { role, content, sources, standalone, toolCalls, isError } = message
   const [showDetails, setShowDetails] = useState(false)
+  const [showSources, setShowSources] = useState(false)
 
+  const hasSources = role === 'assistant' && sources && sources.length > 0
   const hasDetails = role === 'assistant' && (standalone || (toolCalls && toolCalls.length > 0))
 
   return (
@@ -14,14 +16,21 @@ export default function Message({ message }) {
       <div className="bubble">
         <div className="content">{content}</div>
 
-        {role === 'assistant' && sources && sources.length > 0 && (
-          <div className="sources">
-            {sources.map((s, i) => (
-              <span className="source-chip" key={i}>
-                {s.date ? `${s.date} · ` : ''}
-                {s.title}
-              </span>
-            ))}
+        {hasSources && (
+          <div className="sources-block">
+            <button className="sources-toggle" onClick={() => setShowSources((v) => !v)}>
+              {showSources ? '▾' : '▸'} {sources.length} source{sources.length > 1 ? 's' : ''}
+            </button>
+            {showSources && (
+              <div className="sources">
+                {sources.map((s, i) => (
+                  <span className="source-chip" key={i}>
+                    {s.date ? `${s.date} · ` : ''}
+                    {s.title}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
