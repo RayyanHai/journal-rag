@@ -5,7 +5,7 @@
 # compares against the committed baseline and sets the process exit code so CI can
 # fail a pull request on a regression.
 #
-# GATE POLICY (matches ROADMAP.md §1):
+# GATE POLICY:
 #   - HARD FAIL (exit 1) only on a clean  pass -> fail  on any layer. That is an
 #     unambiguous regression: a case the baseline says works, that now doesn't.
 #   - WARN (exit 0) on anything involving `flaky`, or a case missing from the
