@@ -231,11 +231,25 @@ body {
   word-wrap: break-word;
 }
 
+.sources-block {
+  margin-top: 10px;
+}
+.sources-toggle {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.sources-toggle:hover {
+  color: var(--text);
+}
 .sources {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 .source-chip {
   background: var(--chip-bg);
