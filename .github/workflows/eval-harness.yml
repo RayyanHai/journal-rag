@@ -1,6 +1,6 @@
 name: eval-harness
 
-# The eval harness is the project's regression net (see ROADMAP.md §1). This
+# The eval harness is the project's regression net. This
 # workflow runs it against the PUBLIC synthetic demo corpus (JOURNAL_DEMO=1) so CI
 # never touches private journal data, and gates merges on a clean pass -> fail.
 #

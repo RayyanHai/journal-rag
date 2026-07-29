@@ -19,6 +19,21 @@ __pycache__/
 frontend/node_modules/
 web/
 
+# Internal build/design docs — kept LOCAL, not shown in the public repo. The README
+# is the public face. Un-ignore any of these if you decide to publish it.
+/BUILD_LOG.md
+/PHASE_5.md
+/PHASE_6.md
+/ROADMAP.md
+/evals/EVAL_HARNESS.md
+
+# Legacy Phase-1 pipeline (local-JSON store + Ollama), superseded by the ChromaDB
+# path and imported nowhere. Kept local for reference, hidden from the repo.
+/embed.py
+/search.py
+/generate.py
+/hybrid_search.py
+
 # Local agent/tooling state
 .claude/
 

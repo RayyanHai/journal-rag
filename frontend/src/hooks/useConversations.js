@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 
 // Past chats live in localStorage — no backend DB. Each conversation is
-// { id, title, messages: [{ role, content, sources?, standalone?, toolCalls?, isError? }], createdAt }.
+// { id, title, messages: [{ role, content, sources?, isError? }], createdAt }.
+// A source is { title, date?, excerpt? } — excerpt is the passage the answer was cited from.
 // Mutators take an explicit conversation id (never rely on a possibly-stale activeId
 // closure inside async handlers).
 

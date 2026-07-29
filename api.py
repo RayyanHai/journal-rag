@@ -41,6 +41,9 @@ PROJECT_ROOT = Path(__file__).parent
 
 app = FastAPI(title="Journal RAG API", version="1.0")
 
+# How much of a retrieved chunk to surface as the citation excerpt in the UI.
+EXCERPT_CHARS = 320
+
 # Local dev: the front-end may be served from a different origin (e.g. a live-server
 # on :5500) while the API runs on :8000. Allow localhost so the browser can call it.
 app.add_middleware(
@@ -66,6 +69,7 @@ class ChatRequest(BaseModel):
 class Source(BaseModel):
     title: str
     date: str | None = None
+    excerpt: str | None = None  # the retrieved chunk text this entry was cited from
 
 
 class ChatResponse(BaseModel):
@@ -99,8 +103,9 @@ def chat(req: ChatRequest):
 
     # Sources come back one-per-CHUNK, so the same entry appears multiple times when
     # several of its chunks are retrieved. Dedupe to one row per entry (date, title) —
-    # the UI shows entries, not chunks. Drop the heavy chunk `text` too; the UI only
-    # needs title + date. (The engine keeps text internally for the faithfulness judge.)
+    # the UI shows entries, not chunks — but keep the first chunk's `text` as the
+    # excerpt so the UI can show which passage the answer was grounded in. (Trim it so
+    # we don't ship a whole entry; count-derived sources have no text.)
     seen = set()
     sources = []
     for s in result.sources:
@@ -108,7 +113,11 @@ def chat(req: ChatRequest):
         if key in seen:
             continue
         seen.add(key)
-        sources.append(Source(title=s.get("title", "Untitled"), date=s.get("date")))
+        text = (s.get("text") or "").strip()
+        excerpt = text[:EXCERPT_CHARS].rstrip() + "…" if len(text) > EXCERPT_CHARS else text
+        sources.append(
+            Source(title=s.get("title", "Untitled"), date=s.get("date"), excerpt=excerpt or None)
+        )
     return ChatResponse(
         answer=result.answer,
         standalone_question=standalone,
