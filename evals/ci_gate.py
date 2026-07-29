@@ -20,8 +20,8 @@
 # Reuses harness internals directly so there is ZERO duplicated scoring/parsing logic.
 #
 # Usage (demo corpus is selected by JOURNAL_DEMO=1, exactly like the harness):
-#   JOURNAL_DEMO=1 python -m evals.ci_gate                 # PR gate: deterministic layers
-#   JOURNAL_DEMO=1 python -m evals.ci_gate --judge --runs 3  # nightly: full, variance-aware
+#   JOURNAL_DEMO=1 python -m evals.ci_gate --runs 3          # PR gate: deterministic layers
+#   JOURNAL_DEMO=1 python -m evals.ci_gate --judge --runs 3  # full run, judges included
 
 import json
 import sys

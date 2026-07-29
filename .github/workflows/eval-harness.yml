@@ -4,9 +4,14 @@ name: eval-harness
 # workflow runs it against the PUBLIC synthetic demo corpus (JOURNAL_DEMO=1) so CI
 # never touches private journal data, and gates merges on a clean pass -> fail.
 #
-#   PR gate   : deterministic layers only (routing / retrieval / answer). Cheaper and
-#               fully reproducible, but still runs the real agent, so it needs the API
-#               key. Fails the check only on a clean pass -> fail vs baseline_demo.json.
+#   PR gate   : deterministic layers only (routing / retrieval / answer) — cheaper than
+#               the judged run, but NOT deterministic end to end: it drives the real
+#               agent, so it needs the API key and its output varies run to run.
+#               Runs 3x/case for exactly that reason. At 1 run a case is scored
+#               pass/fail with no middle, so one unlucky sample of a genuinely unstable
+#               case reads as a clean pass -> fail and red-X's an unrelated PR. With 3
+#               runs an unstable case scores flaky, which this gate warns on instead of
+#               failing. Fails only on a clean pass -> fail vs baseline_demo.json.
 #   Full run  : manual only (Actions -> Run workflow). Full run with the LLM judges,
 #               3 runs/case for variance; posts a scoreboard to the run summary. Kept
 #               out of a schedule on purpose — no unattended quota spend.
@@ -46,7 +51,9 @@ jobs:
     # PR check: deterministic layers, blocks merge on a clean pass -> fail
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 3 runs/case triples the agent calls, and Gemini rate-limit backoff adds wall
+    # time on top, so the old 20m ceiling is too tight.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -72,8 +79,8 @@ jobs:
           python chunk.py
           python database.py
 
-      - name: Eval gate (deterministic layers)
-        run: python -m evals.ci_gate
+      - name: Eval gate (deterministic layers, 3 runs/case for variance)
+        run: python -m evals.ci_gate --runs 3
 
   # ---------------------------------------------------------------- full run (manual)
   full:
