@@ -1,0 +1,306 @@
+{
+  "saved_at": "2026-07-28T23:45:39",
+  "eval_date": "2026-06-30",
+  "judge_enabled": true,
+  "runs_per_case": 3,
+  "results": [
+    {
+      "q": "When was the last time I hung out with Sam?",
+      "tier": "current",
+      "rates": {
+        "routing": {
+          "passed": 3,
+          "of": 3
+        },
+        "retrieval": {
+          "passed": 3,
+          "of": 3
+        },
+        "answer": {
+          "passed": 3,
+          "of": 3
+        },
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "search_journal"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "When did I first hang out with Sam?",
+      "tier": "current",
+      "rates": {
+        "routing": {
+          "passed": 3,
+          "of": 3
+        },
+        "retrieval": {
+          "passed": 3,
+          "of": 3
+        },
+        "answer": {
+          "passed": 3,
+          "of": 3
+        },
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "search_journal"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "What did I do with Sam after March 1st, 2026?",
+      "tier": "current",
+      "rates": {
+        "routing": {
+          "passed": 3,
+          "of": 3
+        },
+        "retrieval": {
+          "passed": 3,
+          "of": 3
+        },
+        "answer": null,
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "search_journal"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "How many journal entries did I write in May 2026?",
+      "tier": "current",
+      "rates": {
+        "routing": {
+          "passed": 3,
+          "of": 3
+        },
+        "retrieval": null,
+        "answer": {
+          "passed": 3,
+          "of": 3
+        },
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "count_entries"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "How many times did I go to the gym in May 2026?",
+      "tier": "current",
+      "rates": {
+        "routing": {
+          "passed": 3,
+          "of": 3
+        },
+        "retrieval": null,
+        "answer": {
+          "passed": 3,
+          "of": 3
+        },
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "count_entries"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "How many pottery classes have I been to?",
+      "tier": "current",
+      "rates": {
+        "routing": {
+          "passed": 3,
+          "of": 3
+        },
+        "retrieval": null,
+        "answer": {
+          "passed": 3,
+          "of": 3
+        },
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "count_entries"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "Tell me about my trip to Iceland.",
+      "tier": "current",
+      "rates": {
+        "routing": null,
+        "retrieval": null,
+        "answer": {
+          "passed": 3,
+          "of": 3
+        },
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "search_journal"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "What did I do with Mayya recently?",
+      "tier": "current",
+      "rates": {
+        "routing": null,
+        "retrieval": null,
+        "answer": {
+          "passed": 3,
+          "of": 3
+        },
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "search_journal",
+        "search_journal",
+        "search_journal",
+        "search_journal"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "How have I been coping with stress lately?",
+      "tier": "current",
+      "rates": {
+        "routing": {
+          "passed": 3,
+          "of": 3
+        },
+        "retrieval": {
+          "passed": 3,
+          "of": 3
+        },
+        "answer": null,
+        "faithfulness": {
+          "passed": 3,
+          "of": 3
+        },
+        "judge": {
+          "passed": 0,
+          "of": 3
+        }
+      },
+      "tools": [
+        "search_journal"
+      ],
+      "notes": {
+        "faithfulness": "All claims made in the system answer are directly supported by the provided source entries and the dates align with the metadata.",
+        "judge": "The answer failed to include the social break/movie night with Maya, which was specifically listed as a required element in the rubric."
+      }
+    },
+    {
+      "q": "Rate my productivity over the last week.",
+      "tier": "insight",
+      "rates": {
+        "routing": null,
+        "retrieval": null,
+        "answer": {
+          "passed": 3,
+          "of": 3
+        },
+        "faithfulness": null,
+        "judge": null
+      },
+      "tools": [
+        "summarize_period"
+      ],
+      "notes": {
+        "faithfulness": null,
+        "judge": null
+      }
+    },
+    {
+      "q": "For every day in May 2026, what percentage of days did I go to the gym?",
+      "tier": "insight",
+      "rates": {
+        "routing": null,
+        "retrieval": {
+          "passed": 3,
+          "of": 3
+        },
+        "answer": null,
+        "faithfulness": {
+          "passed": 2,
+          "of": 3
+        },
+        "judge": {
+          "passed": 3,
+          "of": 3
+        }
+      },
+      "tools": [
+        "analyze_period"
+      ],
+      "notes": {
+        "faithfulness": "The answer accurately identifies the gym visits from the source text and correctly calculates the percentage based on the provided entries.",
+        "judge": "The answer correctly identifies the number of gym days from the journal entries, calculates the percentage, and clarifies that the data is limited to the journaled days."
+      }
+    },
+    {
+      "q": "Tell me about how my midterm season went.",
+      "tier": "insight",
+      "rates": {
+        "routing": null,
+        "retrieval": null,
+        "answer": null,
+        "faithfulness": {
+          "passed": 3,
+          "of": 3
+        },
+        "judge": {
+          "passed": 3,
+          "of": 3
+        }
+      },
+      "tools": [
+        "search_journal",
+        "summarize_period"
+      ],
+      "notes": {
+        "faithfulness": "All claims in the system answer are directly supported by the provided source entries, and the dates align with the metadata provided.",
+        "judge": "The answer accurately captures the full arc of the April 2026 physics midterm season as described in the provided sources, including stress, coping mechanisms, and the successful outcome."
+      }
+    }
+  ]
+}

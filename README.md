@@ -49,10 +49,12 @@ is also usable standalone for a cheap non-agentic parse.
    NOTION_DATABASE_ID=...    # only needed to (re)ingest
    GEMINI_API_KEY=...        # from aistudio.google.com/apikey, needed at query time
    ```
-2. **Deps** — `pip install chromadb sentence-transformers rank-bm25 openai python-dotenv pydantic notion-client`
+2. **Deps** — `pip install -r requirements.txt`
    (Ollama is no longer required. Query-time LLM calls go through Gemini's
-   OpenAI-compatible endpoint using `gemini-flash-latest`. The `openai` package
-   is the client; no `google-genai` package needed.)
+   OpenAI-compatible endpoint using `gemini-3.1-flash-lite` — a concrete model
+   name on purpose, not a `-latest` alias, since those can resolve to a model
+   with a far tighter free-tier cap. The `openai` package is the client; no
+   `google-genai` package needed.)
 3. **Build the index** (first time only):
    `python ingest.py && python chunk.py && python database.py && python add_date_int.py`
 4. **Chat:** `python main.py`
