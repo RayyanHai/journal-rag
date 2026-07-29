@@ -35,8 +35,6 @@ export default function App() {
         role: 'assistant',
         content: res.answer,
         sources: res.sources,
-        standalone: res.standalone_question,
-        toolCalls: res.tool_calls,
       })
     } catch (e) {
       setError(e.message)

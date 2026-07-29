@@ -5,8 +5,9 @@ A personal-journal question-answering engine over ~800 Notion journal entries
 *"how have I been coping with stress lately?"*, or *"how many times did I go to the
 gym in May?"* and it answers from your own entries, with dates cited.
 
-Built to learn RAG fundamentals hands-on. The narrative of how it was built (and why)
-lives in [BUILD_LOG.md](BUILD_LOG.md); this file is the current-state map.
+Built to learn RAG fundamentals hands-on — temporal-aware retrieval, an agentic tool
+loop, a deterministic count tool, and a five-metric eval harness with a synthetic demo
+corpus so the whole system is runnable without any private data.
 
 ## Architecture
 
@@ -128,24 +129,3 @@ with the conversation history so `router.py` can resolve “what did we eat then
 - ✅ Honest failure — says "couldn't find it" instead of inventing
 - ⚠️ Counts only what's *recorded* in the journal; "every session" isn't guaranteed
   if an activity wasn't written down.
-
-## Legacy files (Phase 1, superseded — kept for reference)
-
-`embed.py`, `search.py`, `generate.py`, `hybrid_search.py`, `data/vector_store.json`
-were the original local-JSON vector store + Ollama/Llama3 pipeline, before the move
-to ChromaDB and (at the time) Claude. Not used by the current query path, which has
-since moved off Claude too — through `o4-mini` via GitHub Models, then
-`llama-3.3-70b-versatile` via Groq, to Gemini now.
-
-## Docs
-
-- [BUILD_LOG.md](BUILD_LOG.md) — the full build history and design decisions (the *story*).
-- [evals/EVAL_HARNESS.md](evals/EVAL_HARNESS.md) — how answer quality is measured:
-  the five metrics, the golden set, variance, judge calibration, reproducibility.
-- [evals/BASELINE_REPORT.md](evals/BASELINE_REPORT.md) — the current scoreboard and
-  what the 2026-07-12 baseline run proved (Phase 5 fail→pass, faithfulness clean).
-- [PHASE_5.md](PHASE_5.md) — design for the next capability: retrospective aggregation
-  (the `insight` tier — per-day stats and recaps over a complete date range).
-- [PHASE_6.md](PHASE_6.md) — the synthetic demo corpus: why it's hand-authored,
-  the self-verifying ground truths, and the harness bug it caught on day one.
-- [ROADMAP.md](ROADMAP.md) — beyond RAG: CI gate, structured-data layer, productionization.
