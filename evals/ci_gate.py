@@ -12,6 +12,10 @@
 #     baseline. LLM output is stochastic; a single noisy run must not break a build.
 #   - NO BASELINE YET (exit 0, warn): before baseline_demo.json is committed there is
 #     nothing to diff, so the gate is inert — it still runs the harness for signal.
+#   - UNMEASURED LAYERS (silent): a layer scored None in either the baseline or this
+#     run wasn't measured, so it is skipped rather than diffed. The PR gate runs
+#     without --judge by design, so the judge/faithfulness layers are None on every
+#     PR; diffing them against a --judge baseline would emit noise on every build.
 #
 # Reuses harness internals directly so there is ZERO duplicated scoring/parsing logic.
 #
@@ -54,6 +58,12 @@ def main(argv):
             old_mark = harness.rate_mark(old.get(layer))
             new_mark = harness.rate_mark(r["rates"][layer])
             if old_mark == new_mark:
+                continue
+            # None == "layer not measured in this run", not a verdict. The PR gate runs
+            # without --judge on purpose, so the judge/faithfulness layers are always
+            # None here while the baseline (recorded with --judge) has real marks.
+            # Comparing the two would warn on every PR forever. No measurement, no signal.
+            if old_mark is None or new_mark is None:
                 continue
             if old_mark == "pass" and new_mark == "fail":
                 regressions.append(f"{r['q'][:50]} [{layer}]: pass -> fail")
