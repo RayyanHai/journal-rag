@@ -9,8 +9,13 @@ export default function Sidebar({
 }) {
   return (
     <aside className="sidebar">
+      <div className="sidebar-brand">
+        <div className="brand-mark">📓</div>
+        <span className="brand-name">Journal RAG</span>
+      </div>
+
       <button className="new-chat" onClick={() => createConversation()}>
-        + New chat
+        <span className="plus">+</span> New chat
       </button>
 
       <RefreshButton />
@@ -38,7 +43,7 @@ export default function Sidebar({
         ))}
       </nav>
 
-      <div className="sidebar-footer">Journal RAG</div>
+      <div className="sidebar-footer">Ask your journal anything</div>
     </aside>
   )
 }

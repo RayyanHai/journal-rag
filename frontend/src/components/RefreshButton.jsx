@@ -50,7 +50,7 @@ export default function RefreshButton() {
         ? 'Journal updated ✓'
         : status === 'error'
           ? 'Refresh failed — retry'
-          : '🔄 Refresh journal'
+          : '↻ Refresh journal'
 
   return (
     <div className="refresh">
