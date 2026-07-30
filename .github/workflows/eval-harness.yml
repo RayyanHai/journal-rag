@@ -7,6 +7,9 @@ name: eval-harness
 #   PR gate   : deterministic layers only (routing / retrieval / answer) — cheaper than
 #               the judged run, but NOT deterministic end to end: it drives the real
 #               agent, so it needs the API key and its output varies run to run.
+#               Runs only for trusted same-repository PRs because GitHub does not pass
+#               Actions secrets to fork or Dependabot pull requests. The separate
+#               quality workflow still validates those PRs without secrets.
 #               Runs 3x/case for exactly that reason. At 1 run a case is scored
 #               pass/fail with no middle, so one unlucky sample of a genuinely unstable
 #               case reads as a clean pass -> fail and red-X's an unrelated PR. With 3
@@ -49,7 +52,10 @@ jobs:
   # ---------------------------------------------------------------- PR gate
   gate:
     # PR check: deterministic layers, blocks merge on a clean pass -> fail
-    if: github.event_name == 'pull_request'
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     # 3 runs/case triples the agent calls, and Gemini rate-limit backoff adds wall
     # time on top, so the old 20m ceiling is too tight.

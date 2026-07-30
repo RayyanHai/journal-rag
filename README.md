@@ -1,10 +1,14 @@
 # Journal RAG
 
+[![quality](https://github.com/RayyanHai/journal-rag/actions/workflows/quality.yml/badge.svg)](https://github.com/RayyanHai/journal-rag/actions/workflows/quality.yml)
+[![eval harness](https://github.com/RayyanHai/journal-rag/actions/workflows/eval-harness.yml/badge.svg)](https://github.com/RayyanHai/journal-rag/actions/workflows/eval-harness.yml)
+
 A personal RAG system built for years of Notion journal entries and thousands of chunks. 
 I use it to ask things like:
+
 - "when was the last time I hung out with ___"
 - "what did I do last week?"
-- "How many times did I go to the gym last month?"
+- "how many times did I go to the gym last month?"
 
 And it answers from my entries with dates cited.
 
@@ -50,17 +54,14 @@ Key decisions I made:
 
 ## How the project evolved
 
-
-
 <p align="center">
-  <img width="350" alt="Journal-Rag Evolution-2026-07-30-050907" src="https://github.com/user-attachments/assets/46eda57e-862d-4735-8438-cef6640d127b" />
+  <img width="350" alt="Journal RAG evolution from basic retrieval to an evaluated full-stack application" src="https://github.com/user-attachments/assets/46eda57e-862d-4735-8438-cef6640d127b" />
 </p>
-
 
 
 ## What I learned
 
-This project helped reshape my original ideas about RAG systems. I learned that the quality of a retrieval matters a lot more than a generation that just looks good. Even if an answer is fluent, it has a high chance of being neither useful nor completely false if there was an error in retrieval.
+This project helped reshape my original ideas about RAG systems. I learned that retrieval quality matters more than generation that merely looks good. A fluent answer can still be wrong or unsupported when retrieval fails.
 
 I learned that you can't have a retrieval strategy for all types of questions. As I tested more questions I wanted to ask my system, I uncovered more flaws. Date lookup, broad reflection, and exact counting could not all be handled by the same prompt or search path.
 
@@ -92,11 +93,20 @@ If I continued this project, I would add retrieval observability (query traces a
 
 ## Running locally
 
+Use Python 3.11 or 3.12. Node.js 22+ is needed only for the web interface.
+
+Clone the repository and install the Python dependencies:
+
 ```bash
+git clone https://github.com/RayyanHai/journal-rag.git
+cd journal-rag
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create a `.env` file:
+Copy `.env.example` to `.env`, then add the credentials you need:
 
 ```env
 GEMINI_API_KEY=your_key
@@ -114,6 +124,9 @@ python database.py
 python main.py
 ```
 
+The demo still needs a Gemini API key for query rewriting and answer generation.
+It does not need Notion credentials and never reads `data/`.
+
 To run with your own journal:
 
 ```bash
@@ -126,6 +139,28 @@ python main.py
 
 For the web app:
 
-```bash
+```powershell
+cd frontend
+npm ci
+npm run build
+cd ..
+$env:JOURNAL_DEMO="1"  # omit this line to use your private journal
 python api.py
 ```
+
+Open <http://127.0.0.1:8000>. For front-end development, run `npm run dev`
+inside `frontend/` while `python api.py` runs in a second terminal.
+
+
+## Privacy and security
+
+- `.env`, the real `data/` corpus, generated indexes, and personal eval artifacts
+  are excluded from Git.
+- The committed `demo/` journal is fictional and is the only corpus used by public CI.
+- The API binds to `127.0.0.1` and accepts browser requests only from its own origin
+  or the local Vite development server.
+- Do not bind the API to a public interface or deploy it without adding authentication,
+  rate limits, and a deployment-specific origin policy.
+
+See [SECURITY.md](SECURITY.md) for the supported deployment boundary and private
+vulnerability-reporting process.

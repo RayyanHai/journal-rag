@@ -1,5 +1,7 @@
 # Direct dependencies (pinned to the versions this was built and eval'd against).
 # torch / numpy etc. come in transitively via sentence-transformers.
+# Chroma is used only through its embedded PersistentClient; this project never
+# starts or exposes Chroma's network server.
 chromadb==1.5.9
 sentence-transformers==5.5.1
 rank-bm25==0.2.2
@@ -9,5 +11,5 @@ pydantic==2.13.4
 notion-client==2.7.0    # only needed to (re)ingest from Notion
 
 # Web app (api.py) — thin HTTP layer over agent.answer_journal + the refresh pipeline.
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
+fastapi==0.139.2
+uvicorn[standard]==0.51.0

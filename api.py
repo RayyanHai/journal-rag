@@ -27,8 +27,9 @@ import threading
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -44,14 +45,34 @@ app = FastAPI(title="Journal RAG API", version="1.0")
 # How much of a retrieved chunk to surface as the citation excerpt in the UI.
 EXCERPT_CHARS = 320
 
-# Local dev: the front-end may be served from a different origin (e.g. a live-server
-# on :5500) while the API runs on :8000. Allow localhost so the browser can call it.
+# Browser origins used by the built app and the Vite development server. The API
+# contains private journal data and has no login, so never allow arbitrary websites
+# to call the localhost service.
+ALLOWED_BROWSER_ORIGINS = {
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+}
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # local single-user tool; not exposed publicly
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=sorted(ALLOWED_BROWSER_ORIGINS),
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
 )
+
+
+@app.middleware("http")
+async def reject_untrusted_browser_origins(request: Request, call_next):
+    """Block cross-site browser calls, including simple POSTs that skip preflight."""
+    origin = request.headers.get("origin")
+    if origin and origin not in ALLOWED_BROWSER_ORIGINS:
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Browser origin is not allowed for this local API."},
+        )
+    return await call_next(request)
 
 
 # ------------------------------------------------------------------ /chat
@@ -83,7 +104,7 @@ class ChatResponse(BaseModel):
 def chat(req: ChatRequest):
     if not req.message.strip():
         raise HTTPException(status_code=400, detail="Empty message.")
-    if "GEMINI_API_KEY" not in os.environ:
+    if not os.getenv("GEMINI_API_KEY"):
         raise HTTPException(status_code=503, detail="GEMINI_API_KEY not set on the server.")
 
     # Mirror main.py: rewrite a follow-up into a standalone question first, but only
@@ -196,7 +217,7 @@ def refresh_status():
 def health():
     return {
         "ok": True,
-        "gemini_key_set": "GEMINI_API_KEY" in os.environ,
+        "gemini_key_set": bool(os.getenv("GEMINI_API_KEY")),
         "demo_mode": os.getenv("JOURNAL_DEMO", "").strip().lower() in ("1", "true", "yes"),
     }
 
