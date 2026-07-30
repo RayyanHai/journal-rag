@@ -49,8 +49,11 @@ Key decisions I made:
 
 
 ## How the project evolved
+
+
+
 <p align="center">
-  <img width="350" alt="How Journal RAG evolved" src="https://github.com/user-attachments/assets/6368d3d5-3c5d-4aed-838c-ed34b4b70c27" />
+  <img width="350" alt="Journal-Rag Evolution-2026-07-30-050907" src="https://github.com/user-attachments/assets/46eda57e-862d-4735-8438-cef6640d127b" />
 </p>
 
 
