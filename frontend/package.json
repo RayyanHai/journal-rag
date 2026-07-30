@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "ChatGPT-style front-end for the Journal RAG engine (talks to api.py).",
+  "description": "React front end for the Journal RAG engine.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

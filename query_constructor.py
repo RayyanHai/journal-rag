@@ -1,20 +1,16 @@
-# query construction (a.k.a. "self-querying")
+# Query construction turns a natural-language question into retrieval filters.
 #
-# a raw vector search has no understanding of time or hard constraints. Ask
-# "what else did I do with Alex after October 9th, 2025?" and the old pipeline
-# just embedded the whole sentence and returned whatever was semantically
-# closest - ignoring "after October 9th" entirely and happily returning a
-# July 2024 entry.
+# A raw vector search does not understand time or hard constraints. Embedding an
+# entire question can return a semantically close result outside the requested
+# date range.
 #
-# this module uses a cheap LLM call to turn a natural-language question into
-# structured retrieval instructions before we hit the database:
+# This module creates structured retrieval instructions before searching:
 #   - search_text: the conceptual part, for the dense/vector side
 #   - keywords: proper nouns (people, places, projects) for the keyword side
 #   - date_after / date_before: hard numeric (YYYYMMDD) range filters
 #   - recency: did the user ask for the latest / earliest mention?
 #
-# the retriever then enforces dates as a real filter and sorts by time when
-# the user wants "the last time", instead of hoping the vectors get it right.
+# The retriever enforces dates as filters and sorts chronologically when needed.
 
 import datetime
 from typing import Optional, List
@@ -24,8 +20,7 @@ from pydantic import BaseModel, Field
 
 from llm_client import parse_structured, GEMINI_MODEL
 
-# One model for everything (used to be a Haiku/Sonnet cost split under Claude).
-# Change this line if a cheaper/faster Gemini model is worth splitting out later.
+# Query construction currently uses the shared model.
 CONSTRUCTOR_MODEL = GEMINI_MODEL
 
 

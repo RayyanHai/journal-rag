@@ -1,19 +1,7 @@
-# SHARED LLM CLIENT — Gemini (OpenAI-compatible endpoint)
+# Shared Gemini client using Google's OpenAI-compatible endpoint.
 #
-# Third LLM provider for this project: Anthropic -> GitHub Models (o4-mini, daily
-# quota exhausted in 2 questions) -> Groq (Llama 3.3 70B, worked but its native
-# function-calling format occasionally emits malformed pseudo-tool-calls, and its
-# free tier's 12K-tokens/minute cap throttled a full eval harness run) -> Gemini.
-#
-# Picked Gemini specifically because its function calling and structured output
-# are first-party Google features (not a community fine-tune's freeform tool-call
-# syntax), and its free tier (gemini-flash-latest: ~1500 req/day, 250K tokens/min)
-# has far more headroom than Groq's for this project's usage pattern.
-#
-# Google's OpenAI-compatible endpoint is documented as still in beta ("we extend
-# feature support" - https://ai.google.dev/gemini-api/docs/openai), so this keeps
-# the same defensive shape (retry wrapper, tool_use_failed handling) as the Groq
-# client in case some OpenAI-shaped request shows up unsupported in practice.
+# The compatibility endpoint is still in beta, so requests use retry handling
+# and include a fallback for unsupported structured-output behavior.
 
 import json
 import os
@@ -26,24 +14,17 @@ from pydantic_core import PydanticUndefined
 load_dotenv()
 
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-# Deliberately NOT a "latest" alias, and NOT gemini-2.5-flash/-lite or
-# gemini-2.0-flash: found the hard way that "gemini-flash-latest" currently
-# resolves to gemini-3.5-flash, whose free tier caps at just 20 requests/DAY
-# (one smoke test nearly exhausted it), while the 2.x models this key's project
-# was created too late to grandfather into ("no longer available to new users",
-# or quota limit 0 outright). gemini-3.1-flash-lite is the concrete model name
-# (not an alias that can silently shift under a new, stingier release) this
-# project's key actually has a usable free quota against.
+# Use a concrete model name so an alias cannot silently move to a model with
+# different limits or behavior.
 GEMINI_MODEL = "gemini-3.1-flash-lite"
 
 DEFAULT_MAX_TOKENS = 1500
 
 MAX_RATE_LIMIT_RETRIES = 5
 _RATE_LIMIT_BASE_DELAY = 5  # seconds; doubles each retry if the server gives no Retry-After
-# A Retry-After beyond this means "quota exhausted for a long stretch," not "briefly
-# throttled" (we got burned by this exact pattern on GitHub Models - an ~85000s
-# Retry-After for a burned-out daily quota). Blindly sleeping that long would hang
-# the process, so treat anything over this as unrecoverable right now and fail fast.
+# A long Retry-After usually means the daily quota is exhausted rather than a brief
+# throttle. Sleeping for that entire period would hang the process, so treat anything
+# over this as unrecoverable right now and fail fast.
 _MAX_HONORED_RETRY_AFTER = 120
 
 # Carried over from the Groq client defensively - Gemini's function calling is
@@ -153,10 +134,9 @@ def parse_structured(
 ):
     """
     Call the model in JSON mode and validate the response against a Pydantic model.
-    Replaces Anthropic's `messages.parse(output_format=...)` — plain JSON mode
-    plus client-side Pydantic validation, since json_object/json_schema support
-    through Gemini's (beta) OpenAI-compat layer is unconfirmed.
-    Raises on a malformed/empty response; callers are expected to catch and fall back.
+    Client-side validation handles cases where the compatibility endpoint does
+    not support the requested structured-output format. Callers should catch
+    malformed or empty responses and fall back as needed.
     """
     client = get_client()
     schema = model_cls.model_json_schema()

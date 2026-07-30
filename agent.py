@@ -1,24 +1,12 @@
-# AGENTIC RE-SEARCH LOOP
+# Agentic journal retrieval.
 #
-# The old pipeline searched ONCE and answered from whatever it got. If the first
-# plan was wrong (keyword off, date window too tight, wrong recency intent) the
-# answer was wrong and nothing recovered.
+# The model searches the journal, reviews the results, and can adjust its query
+# when the first search is too narrow or does not answer the question. It returns
+# an answer once it has enough context or reaches the search limit.
 #
-# Here, retrieval becomes a TOOL the model drives. The model:
-#   1. searches the journal,
-#   2. looks at what came back,
-#   3. if it's empty or doesn't answer the question, searches AGAIN with adjusted
-#      filters (widen dates, drop/swap a keyword, flip recency),
-#   4. answers once it has enough.
-#
-# This is the canonical agentic tool-use loop: hand the model a tool, let it call
-# it until satisfied, then read its final text answer. Runs on Gemini (OpenAI-
-# compatible function calling) instead of Claude Sonnet.
-#
-# No token streaming here: tool-call argument deltas need manual accumulation to
-# stream properly and this runs against a third-party proxy, not the OpenAI API
-# directly. Verbose mode prints tool calls as they happen and the full answer
-# once the call returns, instead of streaming it token by token.
+# Responses are not streamed because tool-call arguments must be accumulated
+# before each search can run. Verbose mode prints each tool call and the final
+# answer after the request completes.
 
 import os
 import sys
@@ -26,9 +14,7 @@ import json
 import datetime
 from dataclasses import dataclass, field
 
-# Windows terminals default stdout to cp1252, which can't encode the emoji in
-# the verbose tool-call prints below - reconfigure to utf-8 so `python agent.py`
-# / `python main.py` don't crash on Windows.
+# Use UTF-8 so verbose output renders correctly in Windows terminals.
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 except AttributeError:

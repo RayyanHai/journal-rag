@@ -1,11 +1,9 @@
-# rewrites a follow-up question into a standalone query using chat history.
-# needed because users ask follow-ups with pronouns/shorthand ("what did we eat?")
-# that don't carry enough context on their own for retrieval.
+# Rewrite follow-up questions as standalone queries using recent chat history.
+# This resolves pronouns and shorthand that do not carry enough context for
+# retrieval on their own.
 #
-# the agent itself is stateless (one question in / one answer out), so THIS is
-# where conversational memory lives: we hand the model the recent history and ask
-# it to fold the context into a self-contained question. Was local Llama3, then
-# Claude Haiku, then o4-mini/GitHub Models, then Llama 3.3 70B/Groq; now Gemini.
+# The retrieval agent is stateless, so the rewriter is responsible for folding
+# relevant conversation context into each question.
 
 import datetime
 
