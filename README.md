@@ -1,133 +1,128 @@
 # Journal RAG
 
-A personal-journal question-answering engine over ~800 Notion journal entries
-(~3,500 chunks). Ask it things like *"when was the last time I hung out with Alex?"*,
-*"how have I been coping with stress lately?"*, or *"how many times did I go to the
-gym in May?"* and it answers from your own entries, with dates cited.
+A personal RAG system built for years of Notion journal entries and thousands of chunks. 
+I use it to ask things like:
+- "when was the last time I hung out with ___"
+- "what did I do last week?"
+- "How many times did I go to the gym last month?"
 
-Built to learn RAG fundamentals hands-on — temporal-aware retrieval, an agentic tool
-loop, a deterministic count tool, and a five-metric eval harness with a synthetic demo
-corpus so the whole system is runnable without any private data.
+And it answers from my entries with dates cited.
 
-## Architecture
+I created this project to gain hands-on experience with the fundamentals of how RAG works and to explore more complex parts. It started as a simple system, and as I encountered problems with answer generation, I implemented additional features and capabilities, such as temporally aware retrieval, agentic loops, deterministic counts, and eventually an eval-harness.
 
-**Offline — build the index (run once, re-run when you add entries):**
+I built the ingestion, chunking, indexing, retrieval, agent workflow, evaluation harness, API, and chat UI end-to-end.
 
-```
-ingest.py    Notion API  -> data/raw/*.json        (one file per entry)
-chunk.py     entries      -> data/chunks/*.json      (sentence/paragraph chunks + metadata)
-database.py  chunks       -> data/chroma_db/         (embeds + loads into ChromaDB)
-add_date_int.py  backfills a numeric date_int (YYYYMMDD) onto every chunk so dates
-                 can be range-filtered ($gte/$lte). One-time migration.
-```
+**Stack:** Python, FastAPI, React, Vite, ChromaDB, BM25, Gemini API, Notion API
 
-**Query-time — answer a question:**
+<img width="1512" height="929" alt="Screenshot 2026-07-28 013253" src="https://github.com/user-attachments/assets/39b69f63-a79f-4ee3-b9a3-22c58d4b079c" />
 
-```
-main.py            interactive chat loop
-  └─ router.py     rewrites a follow-up into a standalone question using chat
-                   history (Gemini). This is where conversational memory lives.
-  └─ agent.py      the agent loop (Gemini). Given two tools, it searches,
-                   inspects results, re-searches with adjusted filters if
-                   needed, then answers — strictly from what it retrieved.
-        ├─ tool: search_journal -> chroma_search.run_chroma_hybrid_search
-        │        temporal-aware hybrid retrieval: date filter + (recency sort
-        │        OR dense-vector + BM25 fused with RRF). Schema = query_constructor.JournalQuery.
-        └─ tool: count_entries  -> chroma_search.count_journal_entries
-                 deterministic EXACT count of matching entries (no top_k cap).
-```
 
-`query_constructor.py` defines the `JournalQuery` schema (search_text, keywords,
-date bounds, recency) reused as the search tool's input contract; `construct_query()`
-is also usable standalone for a cheap non-agentic parse.
 
-## Running it
 
-1. **Env** — create `.env`:
-   ```
-   NOTION_TOKEN=...          # only needed to (re)ingest
-   NOTION_DATABASE_ID=...    # only needed to (re)ingest
-   GEMINI_API_KEY=...        # from aistudio.google.com/apikey, needed at query time
-   ```
-2. **Deps** — `pip install -r requirements.txt`
-   (Ollama is no longer required. Query-time LLM calls go through Gemini's
-   OpenAI-compatible endpoint using `gemini-3.1-flash-lite` — a concrete model
-   name on purpose, not a `-latest` alias, since those can resolve to a model
-   with a far tighter free-tier cap. The `openai` package is the client; no
-   `google-genai` package needed.)
-3. **Build the index** (first time only):
-   `python ingest.py && python chunk.py && python database.py && python add_date_int.py`
-4. **Chat:** `python main.py`
 
-### Demo mode (no Notion, no personal data)
+## How to use it
 
-The repo ships a fictional 72-entry corpus (`demo/`) so anyone can run the full
-system — same pipeline, same agent, same eval harness — without private data:
+I use the system through a simple chat interface frontend. I ask a question as I would to a chatbot, and the system retrieves relevant journal entries to generate an answer.
 
-```
-python demo/generate_demo_corpus.py     # write the synthetic entries (deterministic)
-JOURNAL_DEMO=1 python chunk.py          # chunk them          (PowerShell: $env:JOURNAL_DEMO='1')
-JOURNAL_DEMO=1 python database.py       # build the demo ChromaDB index (local, no API)
-JOURNAL_DEMO=1 python main.py           # chat with the demo journal
-JOURNAL_DEMO=1 python -m evals.harness  # score it against evals/golden_set_demo.py
-```
+It can also answer follow-up questions. For example, after asking about a dinner with someone, I can ask, “what did we eat then?” The system uses the conversation history to rewrite that into a standalone search query before retrieving evidence.
 
-`JOURNAL_DEMO=1` flips every path (corpus, index, golden set, baseline file) via
-`config.py`; without it, everything uses the private `data/` corpus. Try asking:
-*"When did I first hang out with Sam?"*, *"How many pottery classes have I been
-to?"*, or the trap question *"Tell me about my trip to Iceland."* (there is no
-trip — only a documentary — and it should say so).
+For privacy, the public repository includes a fictional demo journal with the same pipeline and evaluation workflow, so anyone can run the project without access to my real entries.
 
-Drive it programmatically (for tests / eval):
-```python
-from agent import answer_journal
-r = answer_journal("How many gym visits in May 2026?", verbose=False)
-r.answer        # the text answer
-r.tool_calls    # [{"name","input"}, ...] — which tools ran with what args
-r.sources       # [{"title","date"}, ...] — entries surfaced
-```
 
-### Web app (chat UI + refresh)
 
-`api.py` is a thin FastAPI layer over the same engine — no RAG logic is duplicated:
+## System design
+<img width="1138" height="1533" alt="image" src="https://github.com/user-attachments/assets/e9aad2af-ff8a-4ca6-8869-0b0378d358bb" />
 
-```
-python api.py          # serves on http://127.0.0.1:8000 (reads the real corpus)
+
+## My engineering focus
+
+This was my exploration of the difference between an LLM answering a question and a system that can answer reliably from evidence. 
+
+Key decisions I made:
+
+- I stored a numeric `date_int` alongside each chunk so temporal questions can use deterministic range filters instead of hoping semantic search understands dates.
+- I used hybrid retrieval: vector similarity for meaning, BM25 for exact terms, and reciprocal-rank fusion to combine the two.
+- I separated counting into a deterministic tool. Search results are capped, so asking an LLM to count retrieved results would produce unreliable totals.
+- I added a query-rewriting step for conversational follow-ups, allowing questions like “what did we eat then?” to be resolved using prior chat context.
+- I designed the agent to re-search when results are weak or incomplete, while requiring answers to stay grounded in retrieved entries.
+- I created a synthetic corpus and a golden-set evaluation harness so I could test retrieval and answer quality without committing sensitive personal data.
+
+
+## How the project evolved
+<p align="center">
+  <img width="350" alt="How Journal RAG evolved" src="https://github.com/user-attachments/assets/6368d3d5-3c5d-4aed-838c-ed34b4b70c27" />
+</p>
+
+
+
+## What I learned
+
+This project helped reshape my original ideas about RAG systems. I learned that the quality of a retrieval matters a lot more than a generation that just looks good. Even if an answer is fluent, it has a high chance of being neither useful nor completely false if there was an error in retrieval.
+
+I learned that you can't have a retrieval strategy for all types of questions. As I tested more questions I wanted to ask my system, I uncovered more flaws. Date lookup, broad reflection, and exact counting could not all be handled by the same prompt or search path.
+
+I also learned when and when not to use LLMs. An LLM is good for interpreting language, choosing tools, and synthesizing evidence, but using deterministic code is better for filtering dates, counting, and enforcing constraints. 
+
+
+## Evaluation
+
+Alongside the demo corpus, I also built a golden-set eval harness to test the system without using my personal entries. This set covers the kinds of questions most likely to fail in a simple RAG implementation. 
+
+Each test runs through the same `answer_journal` entry point used by the app and evaluates five separate layers:
+
+- **Routing:** Did the agent choose the appropriate search or count tool?
+- **Retrieval:** Did it return the required entries and dates?
+- **Answer correctness:** Did the response contain the expected answer, count, or honest refusal?
+- **Faithfulness:** Are the answer’s concrete claims supported by the retrieved sources?
+- **Rubric quality:** For open-ended questions, does the answer fully address the expected evidence?
+
+The cases cover temporal lookups, date ranges, exact counts, misspellings, conceptual reflection, follow-up behavior, incomplete-data handling, and trap questions where the correct answer is to decline rather than invent information.
+
+To make the results reproducible, relative-time questions use a fixed evaluation date. The harness can run cases multiple times to surface LLM variance, and a GitHub Actions regression gate fails only when a previously passing check fails.
+
+
+## Next improvements
+
+If I continued this project, I would add retrieval observability (query traces and ranked-result inspection), stronger automated tests for temporal edge cases, entry-level deduplication across chunks, and a more formal evaluation set based on real but anonymized query patterns.
+
+
+
+## Running locally
+
+```bash
+pip install -r requirements.txt
 ```
 
-- `POST /chat` — `{message, history}` → `{answer, standalone_question, tool_calls, sources}`.
-  Stateless, exactly like `main.py`: the browser owns the history and sends it each
-  turn; the server rewrites follow-ups (`router.py`) then runs the agent.
-- `POST /refresh` + `GET /refresh/status` — re-run the offline pipeline
-  (`ingest → chunk → database → add_date_int`) in the background to pull new Notion
-  entries into the index. Refuses to run in demo mode (it rebuilds the real corpus).
-- `GET /health` — liveness + whether the API key is set.
+Create a `.env` file:
 
-A `web/` directory, when present, is served from the same origin, so one command
-runs both API and UI.
-
-**Front-end** (React + Vite, ChatGPT-style: past chats in the sidebar, source-cited
-answers, a Refresh-journal button). Source in `frontend/`:
-
-```
-# Dev (two terminals, hot reload):
-python api.py                       # API on :8000
-cd frontend && npm install && npm run dev   # UI on :5173 (proxies API calls to :8000)
-
-# Or build once and serve everything from api.py on :8000:
-cd frontend && npm run build        # emits ../web
-python api.py                       # now serves API + UI together
+```env
+GEMINI_API_KEY=your_key
+NOTION_TOKEN=your_token
+NOTION_DATABASE_ID=your_database_id
 ```
 
-Past chats persist in the browser (localStorage) — no database. Follow-ups are sent
-with the conversation history so `router.py` can resolve “what did we eat then?”.
+To run the demo:
 
-## Capabilities & known limits
+```powershell
+python demo/generate_demo_corpus.py
+$env:JOURNAL_DEMO="1"
+python chunk.py
+python database.py
+python main.py
+```
 
-- ✅ Temporal questions ("after Oct 9th", "last time", "first time", date ranges)
-- ✅ Conceptual questions (hybrid vector + keyword search)
-- ✅ Self-correcting re-search (handles misspellings/nicknames, empty results)
-- ✅ Exact counting ("how many times…") via the deterministic count tool
-- ✅ Honest failure — says "couldn't find it" instead of inventing
-- ⚠️ Counts only what's *recorded* in the journal; "every session" isn't guaranteed
-  if an activity wasn't written down.
+To run with your own journal:
+
+```bash
+python ingest.py
+python chunk.py
+python database.py
+python add_date_int.py
+python main.py
+```
+
+For the web app:
+
+```bash
+python api.py
+```
