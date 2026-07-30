@@ -12,7 +12,6 @@ import datetime
 from llm_client import get_client, GEMINI_MODEL, DEFAULT_MAX_TOKENS, create_completion
 
 REWRITER_MODEL = GEMINI_MODEL
-_client = get_client()
 
 
 def build_rewriter_prompt(today):
@@ -61,8 +60,9 @@ def rewrite_query(chat_history, new_question):
     )
 
     try:
+        client = get_client()
         response = create_completion(
-            _client,
+            client,
             model=REWRITER_MODEL,
             max_tokens=DEFAULT_MAX_TOKENS,
             messages=[

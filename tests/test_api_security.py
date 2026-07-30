@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch
 
 os.environ["JOURNAL_DEMO"] = "1"
+os.environ["GEMINI_API_KEY"] = ""
 
 from fastapi.testclient import TestClient
 

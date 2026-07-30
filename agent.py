@@ -49,8 +49,6 @@ AGENT_MODEL = GEMINI_MODEL
 # Hard cap on searches so a confused model can't loop forever.
 MAX_SEARCHES = 4
 
-_client = get_client()
-
 # The tool's input schema mirrors JournalQuery (the structured plan from
 # query_constructor.py) plus top_k. The model fills these in itself now — and can
 # change them between calls, which is the whole point.
@@ -416,6 +414,7 @@ def answer_journal(question, verbose=True, today=None):
     tool_runs = 0
     tool_calls = []
     sources = []
+    client = None
 
     while True:
         if tool_runs >= MAX_SEARCHES:
@@ -426,8 +425,10 @@ def answer_journal(question, verbose=True, today=None):
             tool_choice = "auto"
 
         try:
+            if client is None:
+                client = get_client()
             response = create_completion(
-                _client,
+                client,
                 model=AGENT_MODEL,
                 max_tokens=1500,
                 messages=messages,
